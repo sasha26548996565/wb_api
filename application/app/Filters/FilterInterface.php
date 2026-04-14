@@ -7,5 +7,5 @@ use Illuminate\Database\Eloquent\Builder;
 
 interface FilterInterface
 {
-    public static function searchByRequest (FormRequest $request): Builder;
+    public static function searchByRequest(FormRequest $request): Builder;
 }
