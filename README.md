@@ -86,11 +86,11 @@ php artisan migrate
 
 ```env
 DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
+DB_HOST=89.218.15.180
+DB_PORT=3307
 DB_DATABASE=wb_api
-DB_USERNAME=root
-DB_PASSWORD=
+DB_USERNAME=wb_user
+DB_PASSWORD=r00tr00t_SA
 
 API_URL=http://...
 API_KEY=...
