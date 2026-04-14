@@ -1,63 +1,109 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# WB API
 
+Тестовое REST API на Laravel 8 для работы с данными Wildberries.  
+Получает данные из внешнего API и сохраняет в собственную БД, а также отдаёт их с фильтрацией и пагинацией.
 
-### Тестовое API на фреймворке Laravel
+**Стек:** PHP 8.1, Laravel 8, MySQL, Laravel Octane
 
-#### Реализована выдача сущностей 
-- Продажи 
-- Заказы
-- Склады
-- Доходы
+---
 
-### Основное
+## Авторизация
 
-- Авторизация происходит посредством передачи секретного токена в строке запроса с параметром **key**
-- Формат даты **Y-m-d**
-- Формат дата + время **Y-m-d H:i:s**
-- Все эндпоинты выдают ответ в **json** с пагинацией
-- Лимит на количество возвращаемых записей за запрос - **500** (по умолчанию выдает по **500** строк)
-- Если нужно меньше, то передавать в параметре **limit** в строке запроса
-- Перебор данных происходит по параметру **page** в строке запроса
+Все запросы требуют передачи токена в строке запроса:
 
-_**Пример запроса:** /api/orders?dateFrom={Дата выгрузки ОТ}&dateTo={Дата выгрузки ДО}}&page={номер страницы}&limit={количество записей}key={ваш токен}_
+```
+?key=ваш_токен
+```
 
-#### Продажи
+---
 
-Параметры:
+## Сущности и эндпоинты
 
-- dateFrom
-- dateTo
+Для каждой сущности доступно два метода:
 
-`Путь: GET /api/sales`
+- `GET` — выдача данных из локальной БД с фильтрацией по датам и пагинацией
+- `POST .../store` — загрузка данных из внешнего API и сохранение в локальную БД
 
-#### Заказы
+### Продажи
 
-Параметры:
+```
+GET  /api/sales?dateFrom=2026-03-01&dateTo=2026-04-01&limit=100&page=1&key=...
+POST /api/sales/store?key=...
+```
 
-- dateFrom
-- dateTo
+Body для store: `{ "dateFrom": "2026-03-01", "dateTo": "2026-04-01", "limit": 100 }`
 
-`Путь: GET /api/orders`
+### Заказы
 
-#### Склады 
-_Выгрузка только за текущий день_
+```
+GET  /api/orders?dateFrom=2026-03-01&dateTo=2026-04-01&limit=100&page=1&key=...
+POST /api/orders/store?key=...
+```
 
-Параметры:
+Body для store: `{ "dateFrom": "2026-03-01", "dateTo": "2026-04-01", "limit": 100 }`
 
-- dateFrom
+### Склады
 
-`Путь: GET /api/stocks`
+```
+GET  /api/stocks?dateFrom=2026-04-01&limit=100&page=1&key=...
+POST /api/stocks/store?key=...
+```
 
-#### Доходы
+Body для store: `{ "dateFrom": "2026-04-01", "dateTo": "2026-04-01", "limit": 100 }`
 
-Параметры:
+### Поставки
 
-- dateFrom
-- dateTo
+```
+GET  /api/incomes?dateFrom=2026-03-01&dateTo=2026-04-01&limit=100&page=1&key=...
+POST /api/incomes/store?key=...
+```
 
-`Путь: GET /api/incomes`
+Body для store: `{ "dateFrom": "2026-03-01", "dateTo": "2026-04-01", "limit": 100 }`
 
-`Стек: docker/docker-compose, php 8.1, Laravel 8, Laravel Octane`
+---
 
-[Ссылка на коллекцию Postman](https://www.postman.com/cy322666/workspace/app-api-test/overview)
+## Параметры запросов
 
+| Параметр   | Описание                               | Формат        |
+|------------|----------------------------------------|---------------|
+| `dateFrom` | Дата начала выборки (обязательный)     | `Y-m-d`       |
+| `dateTo`   | Дата конца выборки (обязательный)      | `Y-m-d`       |
+| `limit`    | Размер страницы, макс. 100 для store, 500 для list | число |
+| `page`     | Номер страницы                         | число         |
+| `key`      | Токен авторизации                      | строка        |
+
+---
+
+## Установка
+
+```bash
+cd application
+php artisan key:generate
+php artisan migrate
+```
+
+Настройте `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=wb_api
+DB_USERNAME=root
+DB_PASSWORD=
+
+API_URL=http://...
+API_KEY=...
+```
+
+---
+
+## Архитектура
+
+```
+Contracts/   — интерфейс WildberriesApiClientContract
+DTO/         — объекты передачи данных (StockDTO, IncomeDTO, SaleDTO, OrderDTO)
+Services/    — WildberriesApiClient (http-клиент), *Service (бизнес-логика store)
+```
+
+Внешний API опрашивается постранично. Данные сохраняются через `upsert` — повторный вызов store обновит существующие записи, не создавая дубликатов.

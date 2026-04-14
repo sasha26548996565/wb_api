@@ -2,19 +2,18 @@
 
 namespace App\Filters;
 
-use App\Models\Order;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Income;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Foundation\Http\FormRequest;
 
 class IncomeFilter implements FilterInterface
 {
-    public static function searchByRequest (FormRequest $request): Builder
+    public static function searchByRequest(FormRequest $request): Builder
     {
-        return Order::query()
-            ->whereBetween('date', [
-                $request->dateFrom,
-                $request->dateTo,
-            ]);
+        return Income::query()->whereBetween('date', [
+            $request->dateFrom,
+            $request->dateTo ?? Carbon::today()->toDateString(),
+        ]);
     }
 }

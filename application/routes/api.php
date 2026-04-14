@@ -21,8 +21,15 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([AuthMiddleware::class])->group(function () {
 
     Route::get('sales', [SaleController::class, 'list']);
+    Route::post('sales/store', [SaleController::class, 'store']);
+
     Route::get('stocks', [StockController::class, 'list']);
+    Route::post('stocks/store', [StockController::class, 'store']);
+
     Route::get('orders', [OrderController::class, 'list']);
+    Route::post('orders/store', [OrderController::class, 'store']);
+
     Route::get('incomes', [IncomeController::class, 'list']);
+    Route::post('incomes/store', [IncomeController::class, 'store']);
 });
 
